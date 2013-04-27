@@ -1,0 +1,41 @@
+问题1:设计一一个库表,用于保存用户,好友,图书的条目,用户收藏的图书.并完成如下查询:
+    1.查询某个用户的全部收藏
+    2.查询某个条目都有哪些用户收藏了
+    3.查询某两个指定ID间相同的条目收藏有哪些
+    4.查询某一一本书,自己都有哪些好友进行了收藏
+    5.我与好友的共同收藏的书有哪些
+问题2:如果不能使用join语句,以上SQL语句应如何写,表如何设计(选做)
+
+book
+字段名  数据类型  长度  可否为空  键引用  字段含义  备注
+id       int     11    否      主键   书籍编号
+name   varchar   30    否              书名
+author varchar   30    否              作者
+publish varchar  30    否             出版社
+
+user
+字段名     数据类型  长度  可否为空  键引用  字段含义  备注
+id         int      11     否     主键    用户ID
+name     varchar    30     否             用户名
+password varchar    30     否              密码
+email    varchar    30     否              邮箱
+
+friend
+字段名   数据类型  长度  可否为空  键引用    字段含义  备注
+id        int     11    否      主键       ID
+userid    int     11    否  外键(user:id) 用户id
+friendid  int     11    否  外键(user:id) 好友id
+
+user_book
+字段名  数据类型  长度  可否为空  键引用    字段含义  备注
+id      int      11    否      主键        ID
+userid  int      11    否  外键(user:id) 用户id
+bookid  int      11    否  外键(book:id) 书籍id
+
+1. select book.name from book,user,user_book where user.name = "username" and user.id = user_book.userid and book.id = user_book.bookid
+2. select user.name from book,user_book,user where book.id = user_book.bookid and user.id = user_book.userid and book.name = "bookname"
+3. select book.name book.author from book,user_book as user1,user_book as user2 where user1.userid = userid1 and user2.userid = userid2 and user1.bookid = user2.bookid and book.id = user1.bookid
+  select book.name book.author from book,user_book where user_book.userid = userid1 and book.id in (select book2.id from book as book2,user_book as user_book2 where user_book2.userid = userid2 and book2.id = user_book2.bookid)
+4. select user_friend.name from user as user_friend where user_friend.id in (select friend.friendid from friend,book,user_book where book.name = "bookname" and book.id = user_book.bookid and friend.userid = "myuserid" and friend.friendid = user_book.userid)
+  select user_friend.name from user as user_friend where user_friend.id in (select friend.friendid from friend inner join user_book  on friend.userid = userid1 and friend.friendid = user_book.userid and user_book.bookid = bookid1)
+5. Select book.name book.author from book where book.id in (SELECT ub1.bookid from user_book as ub1,user_book as ub2,friend where ub1.userid = myuserid and ub1.bookid = ub2.bookid and friend.userid = myuserid and friend.friendid = ub2.userid)
